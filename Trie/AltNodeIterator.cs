@@ -14,10 +14,7 @@ namespace CompactTrie
 		/// <summary>Index to the current node in the AltNode array in _trie</summary>
 		internal uint inx { get; private set; }
 
-		private AltNode CurrentNode
-		{
-			get { return _store[inx]; }
-		}
+		private AltNode CurrentNode => _store[inx];
 
 		internal AltNodeIterator(IStore<AltNode> store, uint inx)
 		{
@@ -29,20 +26,15 @@ namespace CompactTrie
 		public AltNodeIterator(IStore<AltNode> store) : this(store, 0) { }
 
 		/// <summary>
-		/// Returns the char at the current index.
+		/// Returns the byte at the current index.
 		/// </summary>
 		/// <description>Since the char is encoded in UTF-8,
 		/// multiple nodes may be needed for one char. End of string is marked with char '\u0000'</description>
 		/// <returns>The char.</returns>
-		public byte GetByte()
-		{
-			return CurrentNode.payload;
-		}
+		public byte GetByte() => CurrentNode.payload;
 
-		public bool HasNext()
-		{
-			return GetByte() != 0;
-		}
+		public bool HasNext() => GetByte() != 0;
+
 		/// <summary>
 		/// Follow the string to the next char. The user should look at GetChar to determine end of string.
 		/// </summary>
@@ -58,10 +50,7 @@ namespace CompactTrie
 			return true;
 		}
 
-		public bool HasAlt()
-		{
-			return CurrentNode.alt != 0;
-		}
+		public bool HasAlt() => CurrentNode.alt != 0;
 
 		/// <summary>
 		/// Go to the alternative continuation of the string. This will replace the current char, and GetChar will return something different.
@@ -77,14 +66,8 @@ namespace CompactTrie
 			return true;
 		}
 
-		public bool IsValid()
-		{
-			return inx < _store.Length;
-		}
+		public bool IsValid() => inx < _store.Length;
 
-		public IByteIterator Clone()
-		{
-			return new AltNodeIterator(_store, inx);
-		}
+		public IByteIterator Clone() => new AltNodeIterator(_store, inx);
 	}
 }

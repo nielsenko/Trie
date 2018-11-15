@@ -7,16 +7,9 @@ namespace CompactTrie
 	{
 		internal IStore<NextNode> _store;
 
-		internal uint inx
-		{
-			get;
-			private set;
-		}
+		internal uint inx { get; private set; }
 
-		private NextNode CurrentNode
-		{
-			get { return _store[inx]; }
-		}
+		private NextNode CurrentNode => _store[inx];
 
 		internal NextNodeIterator(IStore<NextNode> store, uint inx)
 		{
@@ -30,10 +23,7 @@ namespace CompactTrie
 		static private uint Root(IStore<NextNode> store)
 		{
 			var i = (uint)store.Length;
-			do
-			{
-				--i;
-			} while (i < store.Length && (store[i].payload & 0xc0) == 0x80); // skip extension bytes (0b11xxxxxx)
+			do --i; while (i < store.Length && (store[i].payload & 0xc0) == 0x80); // skip extension bytes (0b11xxxxxx)
 			return i;
 		}
 
@@ -45,15 +35,9 @@ namespace CompactTrie
 		/// End of string is marked with char '\u0000'
 		/// </description>
 		/// <returns>The char.</returns>
-		public byte GetByte()
-		{
-			return CurrentNode.payload;
-		}
+		public byte GetByte() => CurrentNode.payload;
 
-		public bool HasNext()
-		{
-			return inx != 0; // next node dawgs share the same termination node, ie. 0
-		}
+		public bool HasNext() => inx != 0; // next node dawgs share the same termination node, ie. 0
 
 		/// <summary>
 		/// Follow the string to the next byte. The user should look at GetByte to determine end of string.
@@ -68,10 +52,7 @@ namespace CompactTrie
 			return true;
 		}
 
-		public bool HasAlt()
-		{
-			return !CurrentNode.noAlt;
-		}
+		public bool HasAlt() => !CurrentNode.noAlt;
 
 		/// <summary>
 		/// Go to the alternative continuation of the string.
@@ -86,14 +67,8 @@ namespace CompactTrie
 			return true;
 		}
 
-		public bool IsValid()
-		{
-			return inx < _store.Length;
-		}
+		public bool IsValid() => inx < _store.Length;
 
-		public IByteIterator Clone()
-		{
-			return new NextNodeIterator(_store, inx);
-		}
+		public IByteIterator Clone() => new NextNodeIterator(_store, inx);
 	}
 }

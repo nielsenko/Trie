@@ -32,7 +32,7 @@ namespace CompactTrie
 
 		/// <summary>
 		/// Go to the alternative continuation of the string, if any. 
-		/// This will replace the current char, and GetChar will return something different.
+		/// This will replace the current byte, and GetByte will return something different.
 		/// </summary>
 		/// <returns>false, if no more alternatives are available here</returns>
 		bool Alt();
