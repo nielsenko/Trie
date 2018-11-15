@@ -16,26 +16,10 @@ namespace CompactTrie.Test
 		}
 
 		[Test]
-		public void IndexerWorkByRefMemoryMapped()
-		{
-			using (var db = MemoryMappedFile.CreateNew("test", 100))
-			{
-				var cts = new MemoryMappedStore<AltNode>(db);
-				IndexerWorkByRef(cts);
-			}
-		}
-
-		[Test]
 		public void IndexerWorkByRefFileBased()
 		{
 			var path = Path.GetTempFileName();
-			using (var fs = File.Create(path))
-			{
-				fs.WriteByte(0); // add a zero byte, or creating a view accessor will fail!
-			}
-
-			using (var db = MemoryMappedFile.CreateFromFile(path))
-			using (var cts = new MemoryMappedStore<AltNode>(db))
+			using (var cts = new MemoryMappedStore<AltNode>(path, 1000))
 			{
 				IndexerWorkByRef(cts);
 			}
@@ -53,24 +37,10 @@ namespace CompactTrie.Test
 		}
 
 		[Test]
-		public void CapacityExceededMemoryMapped()
-		{
-			using (var db = MemoryMappedFile.CreateNew("test", 100))
-			{
-				CapacityExceeded(db);
-			}
-		}
-
-		[Test]
 		public void CapacityExceededFileBased()
 		{
 			var path = Path.GetTempFileName();
-			using (var fs = File.Create(path))
-			{
-				fs.WriteByte(0); // add a zero byte, or creating a view accessor will fail!
-			}
-
-			using (var db = MemoryMappedFile.CreateFromFile(path))
+			using (var db = MemoryMappedFile.CreateFromFile(path, FileMode.Create, null, 100))
 			{
 				CapacityExceeded(db);
 			}
@@ -84,10 +54,8 @@ namespace CompactTrie.Test
 				{
 					payload = 42
 				};
-				cts[101] = n;
-				// actually this exceeds capacity by far, since node is 4 bytes..
-				Assert.That(cts[101].payload, Is.EqualTo(42));
-				// .. but it doesn't matter!
+				Assert.That(() => cts[101] = n, Throws.InstanceOf<ArgumentOutOfRangeException>());
+				Assert.That(() => cts[101].payload == 42, Throws.InstanceOf<IndexOutOfRangeException>()); // Length is still zero!
 			}
 		}
 
@@ -99,26 +67,10 @@ namespace CompactTrie.Test
 		}
 
 		[Test]
-		public void IndexOutOfBoundsMemoryMapped()
-		{
-			using (var db = MemoryMappedFile.CreateNew("test", 100))
-			using (var cts = new MemoryMappedStore<AltNode>(db))
-			{
-				IndexOutOfBounds(cts);
-			}
-		}
-
-		[Test]
 		public void IndexOutOfBoundsFileBased()
 		{
 			var path = Path.GetTempFileName();
-			using (var fs = File.Create(path))
-			{
-				fs.WriteByte(0); // add a zero byte, or creating a view accessor will fail!
-			}
-
-			using (var db = MemoryMappedFile.CreateFromFile(path))
-			using (var cts = new MemoryMappedStore<AltNode>(db))
+			using (var cts = new MemoryMappedStore<AltNode>(path, 100))
 			{
 				IndexOutOfBounds(cts);
 			}
@@ -147,7 +99,7 @@ namespace CompactTrie.Test
 			{
 				using (var db = MemoryMappedFile.CreateFromFile(path))
 				{
-					Assert.That(() => db.CreateViewAccessor(), Throws.InstanceOf<IOException>());
+					Assert.That(db.CreateViewAccessor, Throws.InstanceOf<IOException>());
 					Assert.That(() => new MemoryMappedStore<AltNode>(db), Throws.InstanceOf<IOException>());
 				}
 			}
@@ -160,10 +112,10 @@ namespace CompactTrie.Test
 		[Test]
 		public void LessThanFourBytesHandledGracefully()
 		{
-			NBytes(1);
-			NBytes(2);
-			NBytes(3);
-			NBytes(4);
+			Assert.That(() => NBytes(1), Throws.InstanceOf<InvalidDataException>());
+			Assert.That(() => NBytes(2), Throws.InstanceOf<InvalidDataException>());
+			Assert.That(() => NBytes(3), Throws.InstanceOf<InvalidDataException>());
+			NBytes(4); // Finally there is space
 		}
 
 		public void NBytes(int n)
@@ -181,14 +133,13 @@ namespace CompactTrie.Test
 				}
 			}
 
-			// cts.Length will always read 4 bytes, even if the file is shorter
-			// If the bytes that are past the last byte are initialized to zero, then this
-			// test will pass
+			// cts.Length will need 4 bytes. If the file is shorter, then this
+			// will throw ..
 			using (var db = MemoryMappedFile.CreateFromFile(path))
 			{
 				db.CreateViewAccessor().Dispose(); // no problem here.. 
 				using (var cts = new MemoryMappedStore<AltNode>(db))
-					Assert.That(cts.Length, Is.EqualTo(length));
+					Assert.That(cts.Length, Is.EqualTo(length)); // .. otherwise should hold
 			}
 		}
 

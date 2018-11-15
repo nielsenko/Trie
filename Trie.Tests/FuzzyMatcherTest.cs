@@ -199,7 +199,7 @@ namespace CompactTrie.Test
 			{
 				string found;
 				long elapsed_ms;
-				const long budget_ms = 250;
+				const long budget_ms = 300;
 
 				t.Restart();
 				found = sm.FindBestMatch(probe.input, out int act_dist);

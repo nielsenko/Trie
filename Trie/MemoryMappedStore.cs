@@ -29,24 +29,27 @@ namespace CompactTrie
 
 		MemoryMappedViewAccessor _accessor;
 
-		public MemoryMappedStore(string path) : this(MemoryMappedFile.CreateFromFile(path)) { }
+		public MemoryMappedStore(string path, int capacity, FileMode mode = FileMode.OpenOrCreate) : this(MemoryMappedFile.CreateFromFile(path, mode, null, capacity)) { }
 
 		public MemoryMappedStore(MemoryMappedFile db)
 		{
 			_accessor = db.CreateViewAccessor();
 			try
 			{
+				if (_accessor.Capacity < DataOffset)
+					throw new InvalidDataException($"Capacity must be larger than header ({DataOffset})");
+
 				var nodeSize = _accessor.ReadInt32(NodeSizeOffset);
 				if (nodeSize > 0)
 				{
 					if (NodeSize != nodeSize)
-						throw new InvalidDataException(string.Format("Node size (expected) {0} != {1} (actual)", NodeSize, nodeSize));
+						throw new InvalidDataException($"Node size (expected) {NodeSize} != {nodeSize} (actual)");
 
 					var buffer = new byte[NodeTypeLength];
 					_accessor.ReadArray(NodeTypeOffset, buffer, 0, buffer.Length);
 					var nodeType = new Guid(buffer);
 					if (NodeType != nodeType)
-						throw new InvalidDataException(string.Format("Node type (expected) {0} != {1} (actual)", NodeType, nodeType));
+						throw new InvalidDataException($"Node type (expected) {NodeType} != {nodeType} (actual)");
 
 					// Assume this file was build by MemoryMappedStore
 					Length = _accessor.ReadInt32(LengthOffset);
@@ -77,7 +80,7 @@ namespace CompactTrie
 			get
 			{
 				if (inx >= Length)
-					throw new IndexOutOfRangeException(string.Format("inx: {0} >= {1} :Length", inx, Length));
+					throw new IndexOutOfRangeException($"inx: {inx} >= {Length} :Length");
 
 				_accessor.Read(Project(inx), out TNode n);
 				return n;

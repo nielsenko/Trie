@@ -91,24 +91,36 @@ namespace CompactTrie.Test
 			// Danish case-sensitive string comparer
 			var c = StringComparer.Create(new CultureInfo("da"), false);
 
+			Assert.That(c.Compare("A", "b"), Is.LessThan(0));
 			Assert.That(c.Compare("z", "æ"), Is.LessThan(0));
 			Assert.That(c.Compare("Z", "æ"), Is.LessThan(0));
 			Assert.That(c.Compare("æ", "æ"), Is.EqualTo(0));
-			Assert.That(c.Compare("æ", "Æ"), Is.LessThan(0));
+			Assume.That(c.Compare("æ", "Æ"), Is.Not.LessThan(0));  // <- bug in culture
 			Assert.That(c.Compare("æ", "ø"), Is.LessThan(0));
 			Assert.That(c.Compare("æ", "å"), Is.LessThan(0));
 			Assert.That(c.Compare("Æ", "ø"), Is.LessThan(0));
 			Assert.That(c.Compare("Æ", "å"), Is.LessThan(0));
 			Assert.That(c.Compare("ø", "ø"), Is.EqualTo(0));
-			// Assert.That (c.Compare ("ø", "Ø"), Is.LessThan(0)); // <- bug in culture
+			Assume.That(c.Compare ("ø", "Ø"), Is.Not.LessThan(0)); // <- bug in culture
 			Assert.That(c.Compare("ø", "å"), Is.LessThan(0));
 			Assert.That(c.Compare("Ø", "å"), Is.LessThan(0));
 			Assert.That(c.Compare("å", "å"), Is.EqualTo(0));
-			// Assert.That (c.Compare ("å", "Å"), Is.LessThan(0)); // <- bug in culture
+			Assume.That(c.Compare ("å", "Å"), Is.Not.LessThan(0)); // <- bug in culture
 
 			var dc = new DanishCharComparer();
+			Assert.That(dc.Compare('A', 'b'), Is.LessThan(0));
 			Assert.That(dc.Compare('z', 'æ'), Is.LessThan(0));
 			Assert.That(dc.Compare('Z', 'æ'), Is.LessThan(0));
+			Assert.That(dc.Compare('z', 'ø'), Is.LessThan(0));
+			Assert.That(dc.Compare('Z', 'ø'), Is.LessThan(0));
+			Assert.That(dc.Compare('z', 'å'), Is.LessThan(0));
+			Assert.That(dc.Compare('Z', 'å'), Is.LessThan(0));
+			Assert.That(dc.Compare('z', 'Æ'), Is.LessThan(0));
+			Assert.That(dc.Compare('Z', 'Æ'), Is.LessThan(0));
+			Assert.That(dc.Compare('z', 'Ø'), Is.LessThan(0));
+			Assert.That(dc.Compare('Z', 'Ø'), Is.LessThan(0));
+			Assert.That(dc.Compare('z', 'Å'), Is.LessThan(0));
+			Assert.That(dc.Compare('Z', 'Å'), Is.LessThan(0));
 			Assert.That(dc.Compare('æ', 'æ'), Is.EqualTo(0));
 			Assert.That(dc.Compare('æ', 'Æ'), Is.LessThan(0));
 			Assert.That(dc.Compare('æ', 'ø'), Is.LessThan(0));
@@ -116,11 +128,11 @@ namespace CompactTrie.Test
 			Assert.That(dc.Compare('Æ', 'ø'), Is.LessThan(0));
 			Assert.That(dc.Compare('Æ', 'å'), Is.LessThan(0));
 			Assert.That(dc.Compare('ø', 'ø'), Is.EqualTo(0));
-			Assert.That(dc.Compare('ø', 'Ø'), Is.LessThan(0)); // <- bug in culture
+			Assert.That(dc.Compare('ø', 'Ø'), Is.LessThan(0));
 			Assert.That(dc.Compare('ø', 'å'), Is.LessThan(0));
 			Assert.That(dc.Compare('Ø', 'å'), Is.LessThan(0));
 			Assert.That(dc.Compare('å', 'å'), Is.EqualTo(0));
-			Assert.That(dc.Compare('å', 'Å'), Is.LessThan(0)); // <- bug in culture
+			Assert.That(dc.Compare('å', 'Å'), Is.LessThan(0));
 
 			pm = new PrefixMatcher(trie, "");
 			Assert.That(pm, Is.EqualTo(entries.Concat(æøå)));
